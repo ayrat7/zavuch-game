@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><title>Завуч</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<style>
+:root{--bg:#d9776b;--ink:#111;--h:44px;--f:18px}
+*{box-sizing:border-box;border-radius:0!important}
+body{margin:0;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;min-height:100vh;transition:background .3s}
+.wrap{width:100%;max-width:960px;margin:0 auto;padding:10px}
+.box{background:#fff;padding:12px;margin-bottom:10px}
+h1{margin:0 0 8px;font-size:32px;text-transform:uppercase}h2{margin:0 0 6px}
+button{font:bold 17px Arial;background:#e6c65c;color:#111;border:0;padding:12px;width:100%;margin:4px 0;cursor:pointer}
+button:active{background:#111;color:#fff}
+button.b{background:#7fa8cf;color:#111}button.g{background:#86b58a;color:#111}button.r{background:#d9776b;color:#111}
+.row{display:flex;gap:6px;flex-wrap:wrap}.row button{flex:1;min-width:100px}
+.lv{flex:0 0 52px!important;min-width:52px!important;width:52px;padding:8px 0}
+.lv.lock{background:#bbb;color:#666}.lv.f{background:#111;color:#e6c65c}
+.hide{display:none}
+table{border-collapse:separate;border-spacing:3px;width:100%}
+th,td{border:0;text-align:center;padding:0}
+th{background:#111;color:#fff;padding:5px 2px;font-size:12px}
+td.c{font-weight:bold;background:#eee;padding:4px}
+td.cell{height:var(--h);font-size:var(--f);font-weight:bold;background:#fff;user-select:none;-webkit-user-select:none}
+td.ok{outline:3px solid #5f9a64;outline-offset:-3px;background:#dcecdc}
+td.no{background:repeating-linear-gradient(45deg,#ccc,#ccc 4px,#999 4px,#999 8px)}
+td.cell.bad{background:#d9776b!important;color:#111}
+[data-drag]{touch-action:none;cursor:grab}
+td.cell.t1,.t1{background:#e6c65c;color:#111}td.cell.t2,.t2{background:#7fa8cf;color:#111}td.cell.t3,.t3{background:#86b58a;color:#111}td.cell.t4,.t4{background:#b39ad0;color:#111}td.cell.t5,.t5{background:#e3a56b;color:#111}td.cell.t6,.t6{background:#7cbcc4;color:#111}
+.tc.sel{box-shadow:0 0 0 4px #111}
+.tp{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 10px}
+.tc{border:0;padding:6px 8px;font-size:12px;line-height:1.3;min-width:120px;user-select:none;-webkit-user-select:none}
+.over{background:#d9776b!important;color:#111!important}
+.stat{font-weight:bold;margin-bottom:6px}
+#ghost{position:fixed;z-index:9;pointer-events:none;padding:8px 12px;font-weight:bold;transform:translate(-50%,-50%)}
+body.pc .wrap{max-width:1120px;padding:24px}body.pc .box{padding:22px}body.pc h1{font-size:44px}body.pc button{font-size:20px;padding:16px}body.pc .tc{font-size:14px;min-width:150px;padding:9px 11px}body.pc th{font-size:15px;padding:8px 2px}body.pc{--h:58px;--f:16px}
+body.phone{align-items:flex-start;--h:50px;--f:12px}body.phone .wrap{padding:6px}body.phone th{font-size:10px}
+td.cell{min-width:62px}body.pc td.cell{min-width:72px}#grid{border:3px solid #111}
+</style></head><body>
+<div class="wrap">
+<div id="s-dev" class="box"><h1 data-i="title"></h1><h2 data-i="dev"></h2>
+<button class="b" onclick="dev('phone')" data-i="phone"></button><button class="g" onclick="dev('pc')" data-i="pc"></button></div>
+<div id="s-menu" class="box hide"><h1 data-i="title"></h1><p data-i="menutext"></p>
+<button onclick="start(lvl)" data-i="play"></button>
+<button class="b" onclick="show('s-lv')" data-i="levels"></button>
+<button class="g" onclick="show('s-how')" data-i="how"></button>
+<button onclick="show('s-dev')" data-i="chdev"></button><div class="row"><button onclick="setL('ru')">Русский</button><button onclick="setL('en')">English</button></div></div>
+<div id="s-lv" class="box hide"><h2 data-i="levels"></h2><div class="row" id="lvs"></div><button onclick="show('s-menu')" data-i="back"></button></div>
+<div id="s-how" class="box hide"><h2 data-i="how"></h2><p data-i="howtext"></p><button onclick="show('s-menu')" data-i="back"></button></div>
+<div id="s-game" class="hide">
+<div class="box"><div class="stat" id="info"></div><div id="hint" data-i="hint" style="font-size:13px;margin-bottom:6px"></div><div style="overflow-x:auto"><table id="grid"></table></div></div>
+<div class="box"><h2 data-i="teachers"></h2><div id="teach"></div></div>
+<div class="box"><div class="row"><button onclick="start(lvl)" data-i="again"></button><button class="b" onclick="show('s-menu')" data-i="menu"></button></div></div>
+</div>
+<div id="s-win" class="box hide"><h1 id="wh"></h1><p id="wt"></p>
+<button class="g" id="wn" onclick="start(lvl)"></button><button onclick="show('s-menu')" data-i="menu"></button></div>
+</div>
+<div id="ghost" class="hide"></div>
+<script>
+const SUBJS={ru:["Математика","История","Информатика","Физика","Химия","Биология","Музыка","География"],en:["Mathematics","History","Computer Science","Physics","Chemistry","Biology","Music","Geography"]};
+const SHORT={ru:["Матем","Истор","Инфор","Физик","Химия","Биолог","Музык","Геогр"],en:["Math","Hist","IT","Phys","Chem","Bio","Music","Geo"]};
+const T={ru:{title:"Завуч",dev:"Твоё устройство?",phone:"Телефон",pc:"Компьютер",menutext:"Перетаскивай кубики-учителей в классы. 60 уровней.",play:"Играть (уровень {n})",levels:"Уровни",how:"Как играть",chdev:"Сменить устройство",back:"Назад",teachers:"Учителя (тащи кубик)",again:"Заново",menu:"Меню",lvl:"Уровень",filled:"Заполнено",errs:"Ошибок: {n} — исправь",teacher:"Учитель {s} {q}",load:"Нагрузка",no:"Не ведёт",win:"Победа!",won:"Уровень {n} пройден.",next:"Дальше",gamewin:"ТЫ ПРОШЁЛ ИГРУ!",gw2:"Уровень 60 пройден, осталось {n} сек.",again60:"Играть 60 ещё раз",hint:"Нажми на кубик и потом на клетки — или перетащи кубик.",tout:"Время вышло!",retry:"Попробуй ещё раз.",
+howtext:"• Перетащи кубик учителя в клетку — или нажми на карточку, а затем на клетки (удобно на маленьком экране). Нажатие на заполненную клетку без выбранного кубика очищает её.<br>• Можно поставить кого угодно. Поставить можно кого угодно, но учитель должен вести свой предмет и свой класс — проверка только когда все клетки заполнены.<br>• Красным отметятся ошибки: чужой предмет, класс из списка «Не ведёт», перегрузка.<br>• Лимит нагрузки: учитель не может вести больше классов, чем указано.<br>• Кубик из клетки можно перетащить в другую или за пределы таблицы, чтобы убрать.<br>• Заполни всё без ошибок. Уровень 60 — на время!"},
+en:{title:"Vice Principal",dev:"Your device?",phone:"Phone",pc:"Computer",menutext:"Drag teacher blocks into classes. 60 levels.",play:"Play (level {n})",levels:"Levels",how:"How to play",chdev:"Change device",back:"Back",teachers:"Teachers (drag a block)",again:"Restart",menu:"Menu",lvl:"Level",filled:"Filled",errs:"Errors: {n} — fix them",teacher:"{s} teacher {q}",load:"Load",no:"Can't teach",win:"You win!",won:"Level {n} complete.",next:"Next",gamewin:"YOU BEAT THE GAME!",gw2:"Level 60 complete, {n} sec left.",again60:"Play level 60 again",hint:"Tap a block, then tap cells — or drag the block.",tout:"Time's up!",retry:"Try again.",
+howtext:"• Drag a teacher block into a cell — or tap a card, then tap cells (handy on a small screen). Tapping a filled cell with nothing selected clears it.<br>• You can place anyone. You can place anyone, but each teacher must teach their own subject and an allowed class. Checking happens only when every cell is filled.<br>• Mistakes turn red: wrong subject, a class from the \"Can't teach\" list, or overload.<br>• Load limit: a teacher can't teach more classes than shown.<br>• Drag a block to another cell, or outside the table to remove it.<br>• Fill everything with no errors. Level 60 is timed!"}};
+let lang=(()=>{try{const l=localStorage.getItem("zl");if(l)return l}catch(e){}return (navigator.language||"en").toLowerCase().startsWith("ru")?"ru":"en"})();
+let SUBJ=SUBJS[lang];
+const t=(k,n)=>String(T[lang][k]).replace("{n}",n);
+function applyLang(){SUBJ=SUBJS[lang];document.documentElement.lang=lang;document.querySelectorAll("[data-i]").forEach(e=>e.innerHTML=t(e.dataset.i,lvl))}
+function setL(l){lang=l;try{localStorage.setItem("zl",l)}catch(e){}applyLang();if(S&&!$("s-game").classList.contains("hide"))draw()}
+const COL=["#d9776b","#d9bf72","#7fa8cf","#86b58a","#b39ad0","#e3a56b","#7cbcc4","#8a8f98"];
+const MAX=60,TIME=300;let sel=null,pend=null,lvl=1,best=1,S=null,tm=null,drag=null;
+try{best=+localStorage.getItem("zv")||1}catch(e){}
+lvl=best;
+const $=id=>document.getElementById(id);
+const cn=i=>(5+Math.floor(i/2))+(lang==="ru"?"АБВГ":"ABCD")[i%2];
+function show(id){clearInterval(tm);["s-dev","s-menu","s-lv","s-how","s-game","s-win"].forEach(x=>$(x).classList.toggle("hide",x!==id));
+applyLang();document.body.style.setProperty("--bg",COL[(lvl-1)%COL.length]);if(id==="s-lv")buildLv()}
+function dev(d){document.body.className=d;show("s-menu")}
+function buildLv(){$("lvs").innerHTML="";for(let i=1;i<=MAX;i++){const b=document.createElement("button");b.className="lv"+(i>best?" lock":"")+(i===MAX?" f":"");b.textContent=i===MAX?"60⏱":i;
+b.onclick=()=>{if(i<=best){lvl=i;start(i)}};$("lvs").appendChild(b)}}
+function start(L){clearInterval(tm);lvl=Math.min(L,MAX);L=lvl;
+const nc=Math.min(3+Math.floor(L/6),12),ns=Math.min(2+Math.floor(L/6),8),nt=Math.min(2+Math.floor(L/12),6),cap=Math.ceil(nc/nt);
+const pb=Math.min(0.15+L*0.01,0.55),blk=[];
+for(let s=0;s<ns;s++){const load=Array(nt).fill(0),sol=[];
+for(let c=0;c<nc;c++){const o=[...Array(nt).keys()].filter(t=>load[t]<cap);const t=o[Math.random()*o.length|0];load[t]++;sol[c]=t}
+blk[s]=[];for(let t=0;t<nt;t++){blk[s][t]=[];for(let c=0;c<nc;c++)blk[s][t][c]=sol[c]!==t&&Math.random()<pb}}
+sel=null;S={nc,ns,nt,cap,blk,a:Array.from({length:ns},()=>Array(nc).fill(null)),left:TIME,done:false};
+show("s-game");draw();
+if(L===MAX)tm=setInterval(()=>{S.left--;if(S.left<=0){clearInterval(tm);S.done=true;$("wh").textContent=t("tout");$("wt").textContent=t("retry");$("wn").textContent=t("again");$("wn").onclick=()=>start(MAX);show("s-win")}else info()},1000)}
+const ab=(s,q)=>SHORT[lang][s]+(q+1);
+function loads(){const l=SUBJ.map(()=>Array(S.nt).fill(0));S.a.forEach(r=>r.forEach(v=>v&&l[v[0]][v[1]]++));return l}
+function info(){$("info").textContent=t("lvl")+" "+lvl+(lvl===MAX?" · ⏱ "+Math.floor(S.left/60)+":"+String(S.left%60).padStart(2,"0"):"")+" · "+t("filled")+" "+S.f+"/"+S.nc*S.ns+(S.err?" · "+t("errs",S.err):"")}
+function draw(){const ld=loads();let f=0;
+S.a.forEach(r=>r.forEach(v=>v&&f++));const full=f===S.nc*S.ns;let err=0;const badc={},bado={};
+if(full)for(let s=0;s<S.ns;s++)for(let c=0;c<S.nc;c++){const [ts,tt]=S.a[s][c];if(ts!==s||S.blk[ts][tt][c]){badc[s+"_"+c]=1;err++}}
+if(full)for(let k=0;k<S.ns;k++)for(let t=0;t<S.nt;t++)if(ld[k][t]>S.cap){bado[k+"_"+t]=1;err++}
+let h="<tr><th></th>"+SUBJ.slice(0,S.ns).map(x=>"<th>"+x+"</th>").join("")+"</tr>";
+for(let c=0;c<S.nc;c++){h+="<tr><td class='c'>"+cn(c)+"</td>";
+for(let s=0;s<S.ns;s++){const v=S.a[s][c];
+h+="<td class='cell"+(v?" t"+(v[1]+1):"")+(badc[s+"_"+c]?" bad":"")+"' data-s='"+s+"' data-c='"+c+"'"+(v?" data-drag data-ts='"+v[0]+"' data-t='"+v[1]+"'":"")+">"+(v?ab(v[0],v[1]):"")+"</td>"}h+="</tr>"}
+$("grid").innerHTML=h;
+let tx="";for(let k=0;k<S.ns;k++){tx+="<b>"+SUBJ[k]+"</b><div class='tp'>";
+for(let q=0;q<S.nt;q++){const nb=[];S.blk[k][q].forEach((b,c)=>b&&nb.push(cn(c)));
+tx+="<div class='tc t"+(q+1)+(bado[k+"_"+q]?" over":"")+(sel&&sel[0]===k&&sel[1]===q?" sel":"")+"' data-drag data-ts='"+k+"' data-t='"+q+"'>"+ab(k,q)+" · "+t("teacher").replace("{s}",SUBJ[k].toLowerCase()).replace("{q}",q+1)+"<br>"+t("load")+": "+ld[k][q]+"/"+S.cap+(nb.length?"<br>"+t("no")+": "+nb.join(", "):"")+"</div>"}tx+="</div>"}
+$("teach").innerHTML=tx;S.f=f;S.err=err;info();
+if(full&&!err&&!S.done){S.done=true;clearInterval(tm);setTimeout(win,300)}}
+function win(){if(lvl===MAX){$("wh").textContent=t("gamewin");$("wt").textContent=t("gw2",S.left);$("wn").textContent=t("again60");$("wn").onclick=()=>start(MAX)}
+else{$("wh").textContent=t("win");$("wt").textContent=t("won",lvl);$("wn").textContent=t("next");lvl++;best=Math.max(best,lvl);try{localStorage.setItem("zv",best)}catch(e){}$("wn").onclick=()=>start(lvl)}
+show("s-win")}
+function tapCell(s,c){if(sel)S.a[s][c]=[sel[0],sel[1]];else if(S.a[s][c])S.a[s][c]=null;draw()}
+document.addEventListener("pointerdown",e=>{if(!S||S.done||$("s-game").classList.contains("hide"))return;
+const d=e.target.closest("[data-drag]");
+if(!d){pend=e.target.closest("#grid td.cell");return}
+pend=null;e.preventDefault();const fc=d.tagName==="TD";
+drag={ts:+d.dataset.ts,tt:+d.dataset.t,sx:e.clientX,sy:e.clientY,y:e.clientY,moved:false,fc,el:d,s:fc?+d.dataset.s:0,c:fc?+d.dataset.c:0};
+drag.iv=setInterval(()=>{if(!drag)return;if(drag.y<90)scrollBy(0,-12);else if(drag.y>innerHeight-90)scrollBy(0,12)},16)});
+document.addEventListener("pointermove",e=>{if(!drag)return;drag.y=e.clientY;
+if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>8){drag.moved=true;const g=$("ghost");g.className="t"+(drag.tt+1);g.textContent=ab(drag.ts,drag.tt);if(drag.fc)drag.el.style.opacity=.3}
+if(drag.moved){const g=$("ghost");g.style.left=e.clientX+"px";g.style.top=e.clientY+"px"}});
+document.addEventListener("pointerup",e=>{
+if(!drag){if(pend){const el=document.elementFromPoint(e.clientX,e.clientY),td=el&&el.closest("#grid td.cell");if(td&&td===pend)tapCell(+td.dataset.s,+td.dataset.c)}pend=null;return}
+clearInterval(drag.iv);const d=drag;drag=null;$("ghost").className="hide";
+if(!d.moved){if(d.fc)tapCell(d.s,d.c);else{sel=(sel&&sel[0]===d.ts&&sel[1]===d.tt)?null:[d.ts,d.tt];draw()}return}
+const el=document.elementFromPoint(e.clientX,e.clientY),td=el&&el.closest("#grid td.cell");
+if(td){const s=+td.dataset.s,c=+td.dataset.c,prev=S.a[s][c];
+if(d.fc&&(d.s!==s||d.c!==c))S.a[d.s][d.c]=prev||null;
+S.a[s][c]=[d.ts,d.tt]}
+else if(d.fc)S.a[d.s][d.c]=null;
+draw()});
+document.addEventListener("pointercancel",()=>{if(drag){clearInterval(drag.iv);$("ghost").className="hide";drag=null;draw()}});
+applyLang();buildLv();
+</script></body></html>
